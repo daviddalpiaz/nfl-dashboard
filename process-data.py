@@ -1,6 +1,5 @@
 # imports
 import pandas as pd
-import polars as pl
 import numpy as np
 import matplotlib.pyplot as plt
 import seaborn as sns
@@ -9,50 +8,54 @@ from utils import glimpse
 
 # get data
 url = "https://www.pro-football-reference.com/years/2023/games.htm"
-nfl_2023 = pd.read_html(url)[0]
-nfl_2023 = nfl_2023[nfl_2023["Date"] != "Playoffs"]
+nfl_games = pd.read_html(url)[0]
 
+# remove row without real data
+nfl_games = nfl_games[nfl_games["Date"] != "Playoffs"]
 
-# week
-# team
-# wins
-# loss
-# tie
-# diff
-np.sum(nfl_2023["PtsW"] == nfl_2023["PtsL"])
+# check for no ties
+assert np.sum(nfl_games["PtsW"] == nfl_games["PtsL"]) == 0
 
-nfl_winners = nfl_2023[["Week", "Winner/tie"]]
-nfl_losers = nfl_2023[["Week", "Loser/tie"]]
+# split data into winners and losers
+nfl_winners = nfl_games[["Week", "Winner/tie"]]
+nfl_losers = nfl_games[["Week", "Loser/tie"]]
 
-nfl_winners = nfl_winners.rename(columns={'Week': 'week'})
-nfl_winners = nfl_winners.rename(columns={'Winner/tie': 'team'})
+# rename columns
+nfl_winners = nfl_winners.rename(columns={'Week': 'week', 'Winner/tie': 'team'})
+nfl_losers = nfl_losers.rename(columns={'Week': 'week', 'Loser/tie': 'team'})
 
-nfl_losers = nfl_losers.rename(columns={'Week': 'week'})
-nfl_losers = nfl_losers.rename(columns={'Loser/tie': 'team'})
-
+# add outcome variable 1 = win, -1 = lose
 nfl_winners["outcome"] = 1
 nfl_losers["outcome"] = -1
 
-nfl_winners
-nfl_losers
+# create somewhat tidy data
 nfl = pd.concat([nfl_winners, nfl_losers], ignore_index=True)
 
+# define weeks that are not the regular season
 playoff_rounds = ['ConfChamp', 'Division', 'SuperBowl', 'Week', 'WildCard']
-nfl_2023_regular = nfl[~nfl['week'].isin(playoff_rounds)]
-nfl_2023_regular["week"] = nfl_2023_regular["week"].astype(int)
 
-nfl_2023_regular = nfl_2023_regular.sort_values(['team', 'week'])
-nfl_2023_regular['outcome_cumsum'] = nfl_2023_regular.groupby('team')['outcome'].cumsum()
-nfl_2023_regular[nfl_2023_regular["team"] == "San Francisco 49ers"]
-nfl_2023_regular = nfl_2023_regular.drop("outcome", axis=1)
-nfl_2023_regular = nfl_2023_regular.rename(columns={'outcome_cumsum': 'differential'})
+# subset to regular season games
+nfl_regular = nfl[~nfl['week'].isin(playoff_rounds)]
 
-nfl_2023_regular
+# coerce week variable to be int
+nfl_regular["week"] = nfl_regular["week"].astype(int)
 
-import seaborn as sns
-import matplotlib.pyplot as plt
+# create weekly win-loss differential
+nfl_regular = nfl_regular.sort_values(['team', 'week'])
+nfl_regular['differential'] = nfl_regular.groupby('team')['outcome'].cumsum()
+nfl_regular = nfl_regular.drop("outcome", axis=1)
 
+# view full data
+nfl_regular
+
+# spot check an individual team
+nfl_regular[nfl_regular["team"] == "San Francisco 49ers"]
+
+# plot data
 plt.figure(figsize=(10, 6))
-sns.lineplot(x='week', y='differential', hue='team', data=nfl_2023_regular)
+sns.lineplot(x='week', y='differential', hue='team', data=nfl_regular)
 plt.title('Differential vs Week by Team')
 plt.show()
+
+# TODO: add "week 0"
+# TODO: make plot better
