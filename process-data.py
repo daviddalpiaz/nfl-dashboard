@@ -43,16 +43,37 @@ nfl_regular = nfl_regular.sort_values(["team", "week"])
 nfl_regular["differential"] = nfl_regular.groupby("team")["outcome"].cumsum()
 nfl_regular = nfl_regular.drop("outcome", axis=1)
 
+# get list of teams
+teams = nfl_regular["team"].unique()
+
+# create a df with a week of 0 and a differential of 0 for each team
+week_zero = pd.DataFrame({"team": teams, "week": 0, "differential": 0})
+
+# add week 0 to full data
+nfl_regular = pd.concat([week_zero, nfl_regular], ignore_index=True)
+
 # view full data
 nfl_regular
 
 # spot check an individual team
 nfl_regular[nfl_regular["team"] == "San Francisco 49ers"]
 
-# plot data
+# plot data with seaborn
 plt.figure(figsize=(10, 6))
 sns.lineplot(x="week", y="differential", hue="team", data=nfl_regular)
 plt.title("Differential vs Week by Team")
+plt.show()
+
+# plot data with matplotlib
+fig, ax = plt.subplots(figsize=(10, 6))
+teams = nfl_regular["team"].unique()
+for team in teams:
+    team_data = nfl_regular[nfl_regular["team"] == team]
+    ax.plot(team_data["week"], team_data["differential"], label=team)
+ax.set_title("Differential vs Week by Team")
+ax.set_xlabel("Week")
+ax.set_ylabel("Differential")
+ax.legend()
 plt.show()
 
 # TODO: add "week 0"
