@@ -1,8 +1,6 @@
 # imports
 import pandas as pd
 import numpy as np
-import matplotlib.pyplot as plt
-import seaborn as sns
 
 # get data
 url = "https://www.pro-football-reference.com/years/2023/games.htm"
@@ -58,23 +56,7 @@ nfl_regular
 # spot check an individual team
 nfl_regular[nfl_regular["team"] == "San Francisco 49ers"]
 
-# plot data with seaborn
-plt.figure(figsize=(10, 6))
-sns.lineplot(x="week", y="differential", hue="team", data=nfl_regular)
-plt.title("Differential vs Week by Team")
-plt.show()
+# write processed data to disk
+nfl_regular.to_csv("data/nfl.csv", index=False)
 
-# plot data with matplotlib
-fig, ax = plt.subplots(figsize=(10, 6))
-teams = nfl_regular["team"].unique()
-for team in teams:
-    team_data = nfl_regular[nfl_regular["team"] == team]
-    ax.plot(team_data["week"], team_data["differential"], label=team)
-ax.set_title("Differential vs Week by Team")
-ax.set_xlabel("Week")
-ax.set_ylabel("Differential")
-ax.legend()
-plt.show()
-
-# TODO: add "week 0"
-# TODO: make plot better
+# TODO: encode bye weeks into data!
