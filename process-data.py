@@ -60,3 +60,43 @@ nfl_regular[nfl_regular["team"] == "San Francisco 49ers"]
 nfl_regular.to_csv("data/nfl.csv", index=False)
 
 # TODO: encode bye weeks into data!
+
+# create list of team information
+teams = [
+    ["BUF", "Buffalo Bills", "AFC", "East"],
+    ["MIA", "Miami Dolphins", "AFC", "East"],
+    ["NYJ", "New York Jets", "AFC", "East"],
+    ["NE", "New England Patriots", "AFC", "East"],
+    ["BAL", "Baltimore Ravens", "AFC", "North"],
+    ["CLE", "Cleveland Browns", "AFC", "North"],
+    ["PIT", "Pittsburgh Steelers", "AFC", "North"],
+    ["CIN", "Cincinnati Bengals", "AFC", "North"],
+    ["HOU", "Houston Texans", "AFC", "South"],
+    ["JAX", "Jacksonville Jaguars", "AFC", "South"],
+    ["IND", "Indianapolis Colts", "AFC", "South"],
+    ["TEN", "Tennessee Titans", "AFC", "South"],
+    ["KC", "Kansas City Chiefs", "AFC", "West"],
+    ["LV", "Las Vegas Raiders", "AFC", "West"],
+    ["DEN", "Denver Broncos", "AFC", "West"],
+    ["LAC", "Los Angeles Chargers", "AFC", "West"],
+    ["DAL", "Dallas Cowboys", "NFC", "East"],
+    ["PHI", "Philadelphia Eagles", "NFC", "East"],
+    ["NYG", "New York Giants", "NFC", "East"],
+    ["WAS", "Washington Commanders", "NFC", "East"],
+    ["DET", "Detroit Lions", "NFC", "North"],
+    ["GB", "Green Bay Packers", "NFC", "North"],
+    ["MIN", "Minnesota Vikings", "NFC", "North"],
+    ["CHI", "Chicago Bears", "NFC", "North"],
+    ["TB", "Tampa Bay Buccaneers", "NFC", "South"],
+    ["NO", "New Orleans Saints", "NFC", "South"],
+    ["ATL", "Atlanta Falcons", "NFC", "South"],
+    ["CAR", "Carolina Panthers", "NFC", "South"],
+    ["SF", "San Francisco 49ers", "NFC", "West"],
+    ["LAR", "Los Angeles Rams", "NFC", "West"],
+    ["SEA", "Seattle Seahawks", "NFC", "West"],
+    ["ARI", "Arizona Cardinals", "NFC", "West"],
+]
+
+# create df of team info and write to disk
+teams = pd.DataFrame(teams, columns=["abbreviation", "full_name", "conference", "division"])
+teams.to_csv("data/teams.csv", index=False)
