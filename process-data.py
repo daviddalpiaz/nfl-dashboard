@@ -36,16 +36,11 @@ nfl_regular = nfl[~nfl["week"].isin(playoff_rounds)]
 # coerce week variable to be int
 nfl_regular.loc[:, "week"] = nfl_regular["week"].astype(int)
 
-# create weekly win-loss differential
-nfl_regular = nfl_regular.sort_values(["team", "week"])
-nfl_regular["differential"] = nfl_regular.groupby("team")["outcome"].cumsum()
-nfl_regular = nfl_regular.drop("outcome", axis=1)
-
 # get list of teams
 teams = nfl_regular["team"].unique()
 
 # create a df with a week of 0 and a differential of 0 for each team
-week_zero = pd.DataFrame({"team": teams, "week": 0, "differential": 0})
+week_zero = pd.DataFrame({"team": teams, "week": 0, "outcome": 0})
 
 # add week 0 to full data
 nfl_regular = pd.concat([week_zero, nfl_regular], ignore_index=True)
@@ -53,16 +48,49 @@ nfl_regular = pd.concat([week_zero, nfl_regular], ignore_index=True)
 # view full data
 nfl_regular
 
+# thanks to CoPilot and all the open source maintainers who provided code
+# the following prompt was used to generate some of the code below
+# TODO: insert rows for bye week
+# TODO: create win column, create loss column
+# TODO: cumulative sum to get record for each week
+# TODO: diff the cumulative win and loss column to get differential
+
+# get arrays of teams and weeks
+teams = nfl_regular["team"].unique()
+weeks = nfl_regular["week"].unique()
+
+# create a DataFrame with all possible team-week combinations
+all_combinations = pd.MultiIndex.from_product([teams, weeks], names=["team", "week"]).to_frame(index=False)
+
+# merge with the existing DataFrame and fill missing values
+nfl_regular = pd.merge(all_combinations, nfl_regular, on=["team", "week"], how="left")
+nfl_regular["outcome"].fillna(0, inplace=True)
+
+# create win and loss columns
+nfl_regular["win"] = np.where(nfl_regular["outcome"] == 1, 1, 0)
+nfl_regular["loss"] = np.where(nfl_regular["outcome"] == -1, 1, 0)
+
+# get cumulative sum of wins and losses for each team
+nfl_regular["cumulative_win"] = nfl_regular.groupby("team")["win"].cumsum()
+nfl_regular["cumulative_loss"] = nfl_regular.groupby("team")["loss"].cumsum()
+
+# get differential
+nfl_regular["differential"] = nfl_regular["cumulative_win"] - nfl_regular["cumulative_loss"]
+
+# remove 'win', 'loss', and 'outcome' columns
+nfl_regular = nfl_regular.drop(columns=["win", "loss", "outcome"])
+
+# rename 'cumulative_win' to 'wins' and 'cumulative_loss' to 'losses'
+nfl_regular = nfl_regular.rename(columns={"cumulative_win": "wins", "cumulative_loss": "losses"})
+
 # spot check an individual team
 nfl_regular[nfl_regular["team"] == "San Francisco 49ers"]
 
 # write processed data to disk
 nfl_regular.to_csv("data/nfl.csv", index=False)
 
-# TODO: encode bye weeks into data!
-
 # create list of team information
-teams = [
+teams_list = [
     ["BUF", "Buffalo Bills", "AFC", "East"],
     ["MIA", "Miami Dolphins", "AFC", "East"],
     ["NYJ", "New York Jets", "AFC", "East"],
@@ -98,5 +126,5 @@ teams = [
 ]
 
 # create df of team info and write to disk
-teams = pd.DataFrame(teams, columns=["abbreviation", "full_name", "conference", "division"])
-teams.to_csv("data/teams.csv", index=False)
+teams_list = pd.DataFrame(teams_list, columns=["abbreviation", "full_name", "conference", "division"])
+teams_list.to_csv("data/teams.csv", index=False)
